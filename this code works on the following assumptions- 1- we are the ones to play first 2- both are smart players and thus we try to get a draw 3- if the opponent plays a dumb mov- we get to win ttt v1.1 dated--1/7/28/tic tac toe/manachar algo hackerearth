@@ -8,10 +8,20 @@ print('Hi, %s.' % name)         # Writing output to STDOUT
 '''
 
 # Write your code here
+corners=[(0,0),(2,2),(0,2),(2,0)]
+sides=[(0,1),(1,0),(2,1),(1,2)]
+side_row=[(0,1),(2,1)]
+side_column=[(1,0),(1,2)]
+strategic=[(0,0),(1,0),(1,1)]
 a = []
 for i in range(3):
     a.append([int(j) for j in input().split()])
-player=int(input())
+player1=int(input())
+if player1==1:
+    player2=2
+else:
+    player2=1
+
 from random import randint 
 
 
@@ -52,40 +62,207 @@ def num_move(a):
             if a[i][j]!=0:
                 count +=1
     return count 
+def checkloc(a):
+    for i in range(0,3):
+        for j in range(0,3):
+            if a[i][j]!=0:
+                return i,j
+def movecenter(a):
+    if a[1][1]==0:
+        flag=1
+        return flag,1,1
+    else:
+        return 0,0,0
+def getadjcorner(a,player2):
+    c=0
+    flag=0
+    x=0
+    y=0
+    for i in range(0,3):
+        for j in range(0,3):
+            if a[i][j]==player2:
+                if (i,j) in side_row:
+                    x=i
+                    c+=1
+                if (i,j) in side_column:
+                    y=j
+                    c+=1
+    if c==2:
+        flag=1
     
-def createfork(a):
+    return flag,x,y
+def getadjcorner_2(a,player2):
+    c=0
+    flag=0
+    for i in range(0,3):
+        for j in range(0,3):
+            if a[i][j]== player2:
+                if (i,j)in sides:
+                    si,sj=i,j
+                if (i,j) in corners:
+                    ci,cj=i,j
+            
+    if (si,sj) in side_row_2:
+        x=si
+        y=cj
+    if (si,ji) in side_column_2:
+        y=sj
+        x=ci
+def checkcanwin(a,player):
+    for j in range(0,3):
+        e=0
+        p=0
+        for i in range(0,3):
+            if a[i][j]==0:
+                e+=1
+                x=j
+            if a[i][j]==player:
+                p=1
+        if e==2 and p==1:
+            
+            return 1,x,j
+    for i in range(0,3):
+        e=0
+        p=0
+        for j in range(0,3):
+            if a[i][j]==0:
+                e+=1
+                y=j
+            if a[i][j]==player:
+                p=1
+        if e==2 and p==1:
+            
+            return 1,i,y
+    return 0,0,0
+        
+            
+def checkcornersloc(a,player2):
+    count=0
+    if a[0][0]==player2:
+        count+=1
+    if a[2][0]==player2:
+        count+=1
+    if a[2][2]==player2:
+        count+=1
+    if a[0][2]==player2:
+        count+=1
+    if count==2:
+        return True
+    else:
+        return False    
+def oppcorner(a,player2):
+    if a[0][0]==player2 and a[2][2]==0:
+        return 1,2,2
+    if a[2][2]==player2 and a[0][0]==0 :
+        return 1,0,0
+    if a[0][2]==player2 and a[2][0]==0:
+        return 1,2,0
+    if a[2][0]==player2 and a[0][2]==0:
+        return 1,0,2
+    else:
+        return 0,0,0
+    
+def emptyside(a):
+    flag=0
+    x,y=0,0
+    for i in range(0,3):
+        x,y=sides[i]
+        if a[x][y]==0:
+            flag=1
+            break
+    return flag,x,y
+def anycorner(a):
+    flag=0
+    x,y=0,0
+    for i in range(0,3):
+        x,y=corners[i]
+        if a[x][y]==0:
+            flag=1
+            break
+    return flag,x,y
+            
+def createfork(a): #changes made for the strategic advancement in attacks
     n=num_move(a)
     flag=0
-    if n==2:
+    if(n==1):
         flag=1
-        if a[2][2]==0:
-            return flag,2,2
+        x,y=checkloc(a)
+        if (x,y) in corners:
+            return flag,1,1
+       # if (x,y)==(1,1):
         else:
-            return flag,0,2
+            return flag,0,0
+
+    if n==2:
+        if a[1][1]==player1:                                #if we chose the center strategy
+            flag,x,y=oppcorner(a,player2)
+            return flag,x,y
+        elif a[0][0]==player1:                              #for corner strategy
+            flag,x,y=anycorner(a)
+            return flag,x,y
+        else:                                               #for side strategy
+            if a[1][1]==player2:
+                return 1,2,1
+            elif a[0][0]==player2 or a[2][0]==player2:
+                return 1,0,2
+            elif a[2][1]==player2 or a[2][2]==player2:
+                return 1,2,0
+            elif a[0][1]==player2 or a[0][2]==player2:
+                return 1,0,0
+            else:
+                return 1,0,0
+            
     if n==3:
-        if a[2][0]==1:
+        if checkcornersloc(a,player2):
             flag=1
-            return flag,2,0
+            i=randint(0,3)
+            (i,j)=sides[i]
+            return flag,i,j
+        flag,x,y=getadjcorner(a,player2)
+        if flag:
+            return flag,x,y
+        else:
+            return 0,0,0 #adjacentcorner2 is left to be finished
+    if n==5:
+        flag,x,y=checkcanwin(a,player)
+        if flag:
+            return flag,x,y
+    else:
+        return 0,0,0
+             #checkrowtowin function to be made and integreted
 def random_move():
     x=randint(0,2)
     y=randint(0,2)
     return x,y
-while(True):
-    if max(max(a))==min(min(a)):
-        print (0,0)
-        break
-    flag,i,j=checkwin(a,1)
+def move(a,player):
+    if (max(max(a))==min(min(a)) and player==1):
+        x,y=strategic[randint(0,2)]
+        return x,y
+    flag,i,j=checkwin(a,player)  #checking for our own win
     if flag:
-        print (j,i)
-        break
-    flag,i,j=checkwin(a,2)
+        return (i,j)
+        
+    flag,i,j=checkwin(a,player2) #blocking if any chances for opponent's win
     if flag:
-        print (j,i)
-        break
-    flag,i,j=createfork(a)
+        return (i,j)
+        
+    flag,i,j=createfork(a) #moving to suitable places so as to create a fork
     if flag:
-        print (i,j)
-        break
-    
+        return (i,j)
+    flag,i,j=movecenter(a) #moving to center
+    if flag:
+        return (i,j)
+    flag,i,j=oppcorner(a,player2) #moving to opposite corner of the opponent
+    if flag:
+        return (i,j)
+    flag,i,j=anycorner(a) #moving to any empty corner
+    if flag:
+        return (i,j)
+    flag,i,j=emptyside(a) #moving to any empty side
+    if flag:
+        return (i,j)
+           
+x,y=move(a,player1)
+print(y,x)
     
 
